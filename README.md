@@ -1,55 +1,44 @@
-## [deeptesting-junk.pl](deeptesting-junk.pl)
+## THIS GUIDE IS SPECIFIC FOR REALME 8I/NARZO 50 ONLY. ADAPT IT FOR YOUR DEVICE. ##
 
-If you tried to use Realme's "deep testing" apk from [here](https://c.realme.com/in/post-details/1591008567903752192)
-and got that nasty "This phone model does not support deep testing." screen,
-this [script](deeptesting-junk.pl) may help you bypass it.
+REQUIREMENTS:
+* Working platform-tools installed (adb & fastboot)
+* Data backup (your device gets reset after unlock)
+* Brains
+* OEM unlocking enabled from developer settings
+* USB debugging enabled, and device verified (adb devices) from developer settings
 
-Run it like this, replacing the `HHH...` with the serial number and the `DDD...`
-with IMEI 1 (you can get them both from Settings/About Device/Status):
+Steps:
+1. Clone this repository. (git clone https://github.com/rk134/realme8i-ubl)
+2. Go to setings > about device > status.
+3. Copy your IMEI 1 & serial number.
+4. Open a terminal in the cloned folder.
+5. run this (keep 0x, replace H* with your serial number, and replace D with IMEI 1.):
 ```
 perl deeptesting-junk.pl pcb 0xHHHHHHHH imei DDDDDDDDDDDDDDD cmd applyLkUnlock
 ```
-**Keep the `0x` at the start of the serial number, it's not a typo!**\
-Also notice that --despite the `pcb` name-- it really is the serial number, not the
-pcb number from the engineermode app! [^1]
-
-If the answer is `{"resultCode":0,"msg":"SUCCESS"}`, continue with
+6. After it shows `{"resultCode":0,"msg":"SUCCESS"}`, then run this command:
 ```
 perl deeptesting-junk.pl pcb 0xHHHHHHHH imei DDDDDDDDDDDDDDD cmd checkApproveResult
 ```
-If the answer is somethink like
+7. After it shows {"resultCode":0,"msg":"SUCCESS","data":{"unlockCode":"0345af...lots of hexdigits"}}
+   install the apk, and apply for deep test.
+8. After waiting for a few minutes, go back and query application status.
+9. After approval, click start deep testing IF YOU MEET PREREQUSISITES.
+10. It will reboot to fastboot, ignore any errors/warnings. Then run the following command:
 ```
-{"resultCode":0,"msg":"SUCCESS","data":{"unlockCode":"0345af...lots of hexdigits"}}
+fastboot flashing unlock
 ```
-then try running again the deeptesting app on the phone.
+11. It will prompt you and show a big scarwy warning of warranty. Ignore it, and select yes and press the power button.
+12. You will be greeted with a boot mode screen. DO NOT PRESS ANYTHING.
+13. Hold power + vol down, and you will return back to the fastboot screen.
+14. Type fastboot reboot recovery.
+15. You are now in recovery. Format data, and reboot to system. 
+16. Setup device, and then check oem unlocking option in developer settings (should be greyed out)
 
-That should now work as described in their tutorials, and the app will reboot the phone
-into fastboot/bootloader mode from where you could unlock the bootloader from
-your PC with `fastboot flashing unlock`.
+As usual, me or turistu OR ANY OTHER ENTITY are not responsible for any issues/damages caused to your device.
+Please do not bother us for device support, drivers issues etc.
+Instead, ask for advice in your device specific telegram groups/chats.
 
-Before running the app, you could also try the script with the actual model and
-firmware version sent by the app, e.g.:
-```
-perl deeptesting-junk.pl pcb 0xHHHHHHHH imei DDDDDDDDDDDDDDD cmd checkApproveResult \
-       model RMX3474EEA otaVersion RMX3474_XX.L.XX_XXXX_YYYYMMDDHHMM
-```
+This method is confirmed working on realme 9 (RMX3474), realme 8i (RMX3151), realme narzo 50 (RMX3286) as of 18/05/2023.
 
-This worked for me, at some point in February 2023, on a Realme 9 5G RMX3474, the
-Android 12 GDPR variant of the firmware.
-
-The `deeptesting-junk.pl` script does nothing else than simulate the https requests
-performed by the deeptesting app to their `lkf.realmemobile.com` server; it does not
-save or send any data anywhere else.
-
-On a debian-like linux system, use `apt-get install libwww-perl libcrypt-rijndael-perl`
-to install the modules required by this script.
-
-On windows, the [Strawberry Perl](https://strawberryperl.com/) distribution includes
-those modules by default; to prevent the windows console from mangling the output, set
-its code page to utf-8 with `chcp 65001` before running the script.
-
-[^1]: The app is getting that value from the [`/proc/oplusVersion/serialID`][serial_id] file.
-If you instead try with something that looks like a pcb number, they place your request in
-a queue and make you wait forever for an approval which will never come.
-
-[serial_id]: https://github.com/realme-kernel-opensource/realme_9pro-5G_9-5G_V25_Q5-AndroidT-vendor-source/blob/9b580d19cd823d93177691661bba365faba23096/vendor/oplus/kernel/system/oplus_project/qcom/oplus_project.c#L362
+This method is not guaranteed to work all the time, and could be easily patched. Good luck!
